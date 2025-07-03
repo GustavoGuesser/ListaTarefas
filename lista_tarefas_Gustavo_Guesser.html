@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lista de Tarefas simples com Firebase</title>
+  <style>
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: #f0f2f5;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  padding: 12px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+button {
+  padding: 12px 16px;
+  margin-left: 8px;
+  background-color: #007bff;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 30px;
+  width: 380px;
+}
+
+li {
+  background: #fff;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+li.done {
+  text-decoration: line-through;
+  color: #999;
+  background: #f8f9fa;
+}
+
+li button {
+  margin-left: 10px;
+  background-color: #28a745;
+}
+
+li button:first-child {
+  margin-left: 0;
+}
+
+li button:hover {
+  background-color: #1e7e34;
+}
+
+li button:last-child {
+  background-color: #dc3545;
+}
+
+li button:last-child:hover {
+  background-color: #a71d2a;
+}
+
+footer {
+  margin-top: 40px;
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+}
+
+
+  </style>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWcJXV5uhlV0ToIlXdTXO7_yNTfwRFFkE",
+      authDomain: "listatarefasgustavo.firebaseapp.com",
+      projectId: "listatarefasgustavo",
+	  storageBucket: "listatarefasgustavo.firebasestorage.app",
+	  messagingSenderId: "495312965640",
+	  appId: "1:495312965640:web:501edd5fb04178683641bd",
+	  measurementId: "G-JJWCQP9TF1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.addTask = async function() {
+      const input = document.getElementById('taskInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      await addDoc(collection(db, "tasks"), {
+        text: text,
+        done: false
+      });
+
+      input.value = '';
+      loadTasks();
+    }
+
+    window.toggleDone = async function(id, current) {
+      await updateDoc(doc(db, "tasks", id), { done: !current });
+      loadTasks();
+    }
+
+    window.deleteTask = async function(id) {
+      await deleteDoc(doc(db, "tasks", id));
+      loadTasks();
+    }
+
+    async function loadTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+
+      const querySnapshot = await getDocs(collection(db, "tasks"));
+      querySnapshot.forEach((docSnap) => {
+        const li = document.createElement('li');
+        li.textContent = docSnap.data().text;
+        if (docSnap.data().done) li.classList.add('done');
+
+        const doneBtn = document.createElement('button');
+        doneBtn.textContent = 'Concluir';
+        doneBtn.onclick = () => toggleDone(docSnap.id, docSnap.data().done);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Excluir';
+        delBtn.onclick = () => deleteTask(docSnap.id);
+
+        li.appendChild(doneBtn);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    window.onload = loadTasks;
+  </script>
+</head>
+<body>
+  <h1>Lista de Tarefas</h1>
+  <input type="text" id="taskInput" placeholder="Nova tarefa..." />
+  <button onclick="addTask()">Adicionar</button>
+  <ul id="taskList"></ul>
+  <footer>
+  Autor: Gustavo Guesser<br>
+  Instituição: Uniasselvi<br>
+  Curso: Análise e Desenvolvimento de Sistemas<br>
+  Disciplina: Imersão Profissional: Implementação de uma Aplicação
+</footer>
+</body>
+</html>
